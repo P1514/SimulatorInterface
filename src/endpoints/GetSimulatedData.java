@@ -23,6 +23,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import general.Server;
+
 @Path("/getSimulatedData")
 public class GetSimulatedData {
 	@DefaultValue("")
@@ -30,7 +32,6 @@ public class GetSimulatedData {
 	String accounts;
 	@Context
 	UriInfo ui;
-	private static DataSource condata = null;
 	public static final String err_unknown = "ERROR ";
 	public static final String err_dbconnect = "Cannot connect to database Please Try Again Later.";
 	public static final String err_cr = "Cannot connect to common repository";
@@ -66,7 +67,7 @@ public class GetSimulatedData {
 		java.util.Date date = null;
 		long postid;
 		long replyid;
-		try (Connection cndata = connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
+		try (Connection cndata = Server.connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
 
 			for (int i = 0; i < account.length; i++)
 				stmt.setString(i + 1, account[i]);
@@ -143,64 +144,5 @@ public class GetSimulatedData {
 		}
 		return Response.status(Response.Status.OK).entity(result.toString()).build();
 
-	}
-
-	/**
-	 * Connlocal.
-	 *
-	 * @return the connection
-	 * @throws ClassNotFoundException
-	 *             the class not found exception
-	 */
-	public static Connection connlocal() throws ClassNotFoundException, SQLException {
-		try {
-
-			if (condata == null)
-				startconnections();
-
-			Future<Connection> future = condata.getConnectionAsync();
-			while (!future.isDone()) {
-				try {
-					Thread.sleep(100); // simulate work
-				} catch (InterruptedException x) {
-					Thread.currentThread().interrupt();
-				}
-			}
-
-			return future.get(); // should return instantly
-		} catch (Exception e) {
-			System.out.println(err_dbconnect);
-			return null;
-		}
-	}
-
-	public static void startconnections() {
-		PoolProperties p = new PoolProperties();
-		p.setUrl("jdbc:mysql://127.0.0.1:3306/sentimentposts?autoReconnect=true&useSSL=false");
-		p.setDriverClassName("com.mysql.jdbc.Driver");
-		p.setUsername("diversity");
-		p.setPassword("!diversity!");
-		p.setJmxEnabled(true);
-		p.setTestWhileIdle(false);
-		p.setTestOnBorrow(true);
-		p.setFairQueue(true);
-		p.setValidationQuery("SELECT 1");
-		p.setTestOnReturn(false);
-		p.setValidationInterval(30000);
-		p.setTimeBetweenEvictionRunsMillis(30000);
-		p.setMaxActive(1);
-		p.setMaxIdle(1);
-		p.setInitialSize(1);
-		p.setMaxWait(10000);
-		p.setRemoveAbandonedTimeout(60);
-		p.setMinEvictableIdleTimeMillis(30000);
-		p.setMinIdle(1);
-		p.setLogAbandoned(true);
-		p.setRemoveAbandoned(true);
-		p.setJdbcInterceptors("org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
-				+ "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;"
-				+ "org.apache.tomcat.jdbc.pool.interceptor.ResetAbandonedTimer");
-		condata = new DataSource();
-		condata.setPoolProperties(p);
 	}
 }
