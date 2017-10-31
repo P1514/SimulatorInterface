@@ -1,5 +1,8 @@
 package endpoints;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,12 +11,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -27,14 +34,23 @@ import general.Server;
 
 @Path("/getSimulatedData")
 public class GetSimulatedData {
-	@DefaultValue("")
-	@QueryParam("accounts[]")
-	String accounts;
+
 	@Context
 	UriInfo ui;
 	public static final String err_unknown = "ERROR ";
 	public static final String err_dbconnect = "Cannot connect to database Please Try Again Later.";
 	public static final String err_cr = "Cannot connect to common repository";
+	private List<String> epochsTo;
+	private List<String> epochsFrom;
+	private List<String> epochsTo_SIM = new ArrayList<>();
+	private List<String> epochsTo_IS = new ArrayList<>();
+	private List<String> epochsFrom_IS = new ArrayList<>();
+	private List<String> epochsFrom_SIM = new ArrayList<>();
+	private List<String> accounts;
+	private List<String> accounts_SIM = new ArrayList<>();
+	private List<String> accounts_IS = new ArrayList<>();
+	private long pssId = -1;
+	private String pssName = "";
 
 	/**
 	 * Builds a matrix where the rows are all the rules in the selected design
@@ -48,30 +64,46 @@ public class GetSimulatedData {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public Response welcome() throws JSONException, SQLException {
-		if ("".equals(accounts))
+		MultivaluedMap<String, String> params = ui.getQueryParameters();
+		if (!verifyparams(params))
 			return Response.status(Response.Status.BAD_REQUEST).build();
-		String query = "SELECT post.*, `user`.age, `user`.gender, `user`.name,`user`.location FROM sentimentposts.post inner join sentimentposts.user on sentimentposts.post.user_id=sentimentposts.user.id and sentimentposts.post.product in (";
+		splitaccounts();
+		String query = "SELECT post.*, `user`.age, `user`.gender, `user`.name,`user`.location FROM sentimentposts.post inner join sentimentposts.user on sentimentposts.post.user_id=sentimentposts.user.id and (sentimentposts.post.product in (";
 
-		String[] account = accounts.split(",");
-		for (int i = 0; i < account.length; i++)
-			query += "?,";
-		query = query.substring(0, query.length() - 1) + ") ";
+		int size = accounts_SIM.size();
+		for (int i = 0; i < size; i++) {
+			if (i != 0)
+				query += " or sentimentposts.post.product in (";
+			query += "?) and sentimentposts.post.timestamp>? and sentimentposts.post.timestamp<?";
+		}
+		// query = query.substring(0, query.length() - 1) + ") ";
+		query += ") order by post.id ASC";
+//		System.out.println(accounts_SIM);
+//		System.out.println(epochsFrom);
+//		System.out.println(epochsTo);
+//		System.out.println(query);
 
-		query += "order by post.id ASC";
-		System.out.print(accounts);
 		JSONArray result = new JSONArray();
 		JSONObject post;
 		JSONArray replies;
 		JSONObject reply;
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		java.util.Date date = null;
+		java.util.Date dateFrom = new Date(1);
+		java.util.Date dateTo = new Date(1);
 		long postid;
 		long replyid;
+
 		try (Connection cndata = Server.connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
-
-			for (int i = 0; i < account.length; i++)
-				stmt.setString(i + 1, account[i]);
-
+			int j=1;
+			for (int i = 0; i < size; i++) {
+				stmt.setString(j++, accounts_SIM.get(i));
+				dateFrom.setTime(Long.parseLong(epochsFrom_SIM.get(i)));
+				stmt.setString(j++, df.format(dateFrom));
+				dateTo.setTime(Long.parseLong(epochsTo_SIM.get(i)));
+				stmt.setString(j++, df.format(dateTo));
+			}
+			//System.out.println(stmt.toString());
 			try (ResultSet rs = stmt.executeQuery()) {
 
 				if (rs.isClosed())
@@ -138,11 +170,98 @@ public class GetSimulatedData {
 					result.put(post);
 				}
 			}
+			if(accounts_IS.size()>0) {
+			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
+			for(int i =0; i<accounts_IS.size();i++)
+				request+="&epochsFrom[]="+epochsFrom_IS.get(i)+"&epochsTo[]="+epochsTo_IS.get(i)+"&pssId="+pssId+"&accounts[]="+accounts_IS.get(i);
+			//System.out.println(request);
+		JSONArray ISdata = new JSONArray(readUrl(request));
+			for (int i = 0; i < ISdata.length(); i++) {
+		        result.put(ISdata.get(i));
+		    }
+			}
 		} catch (Exception e) {
 			System.out.println("ERROR3");
 			e.printStackTrace();
 		}
 		return Response.status(Response.Status.OK).entity(result.toString()).build();
 
+	}
+
+
+	private void splitaccounts() {
+		List<String> SIM_accounts = new ArrayList<String>();
+
+		try (Connection cnlocal = Server.connlocal();
+				Statement stmt = cnlocal.createStatement();
+				ResultSet rs = stmt.executeQuery(("Select distinct(product) from post"));) {
+			while (rs.next())
+				SIM_accounts.add(rs.getString(1));
+
+		} catch (ClassNotFoundException | SQLException e) {
+			System.out.println("ERROR ON SPLIT ACCOUNTS");
+		}
+
+		for (int i=0; i<accounts.size();i++) {
+			if (SIM_accounts.contains(accounts.get(i))) {
+				accounts_SIM.add(accounts.get(i));
+				epochsFrom_SIM.add(epochsFrom.get(i));
+				epochsTo_SIM.add(epochsTo.get(i));
+				
+			} else {
+				accounts_IS.add(accounts.get(i));
+				epochsFrom_IS.add(epochsFrom.get(i));
+				epochsTo_IS.add(epochsTo.get(i));
+			}
+
+		}
+
+		System.out.println("RESQUEST TO LOCAL:=> " + accounts_SIM);
+		System.out.println("/n/r Request to IS:=> " + accounts_IS);
+	}
+
+	private boolean verifyparams(MultivaluedMap<String, String> params) {
+		if (params.get("accounts[]") == null)
+			return false;
+		if (params.get("epochsTo[]") == null)
+			return false;
+		if (params.get("epochsFrom[]") == null)
+			return false;
+		if (params.get("pssId") != null)
+			pssId = Long.parseLong(params.getFirst("pssId"));
+		if (params.get("pssName") != null)
+			pssName = params.getFirst("pssName");
+
+		accounts = params.get("accounts[]");
+		epochsTo = params.get("epochsTo[]");
+		epochsFrom = params.get("epochsFrom[]");
+
+		if (epochsTo.size() != epochsFrom.size())
+			return false;
+		if (accounts.size() != epochsTo.size())
+			return false;
+
+		return true;
+
+	}
+
+	
+	public static String readUrl(String urlString) throws Exception {
+		BufferedReader reader = null;
+		try {
+			URL url = new URL(urlString);
+			// System.out.println("URL:" + url.toString());
+			reader = new BufferedReader(new InputStreamReader(url.openStream()));
+			StringBuffer buffer = new StringBuffer();
+			int read;
+			char[] chars = new char[1024];
+			while ((read = reader.read(chars)) != -1)
+				buffer.append(chars, 0, read);
+
+			return buffer.toString();
+		} finally {
+			if (reader != null)
+				reader.close();
+		}
 	}
 }
