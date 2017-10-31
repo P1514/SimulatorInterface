@@ -94,7 +94,9 @@ public class GetSimulatedData {
 		java.util.Date dateTo = new Date(1);
 		long postid;
 		long replyid;
+		
 		try (Connection cndata = connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
+			if(accounts_SIM.size()>0) {
 			int j=1;
 			for (int i = 0; i < size; i++) {
 				stmt.setString(j++, accounts_SIM.get(i));
@@ -103,7 +105,7 @@ public class GetSimulatedData {
 				dateTo.setTime(Long.parseLong(epochsTo_SIM.get(i)));
 				stmt.setString(j++, df.format(dateTo));
 			}
-			//System.out.println(stmt.toString());
+			System.out.println(stmt.toString());
 			try (ResultSet rs = stmt.executeQuery()) {
 
 				if (rs.isClosed())
@@ -170,16 +172,18 @@ public class GetSimulatedData {
 					result.put(post);
 				}
 			}
+		}
 			if(accounts_IS.size()>0) {
 			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
 			for(int i =0; i<accounts_IS.size();i++)
-				request+="&epochsFrom[]="+epochsFrom_IS.get(i)+"&epochsTo[]="+epochsTo_IS.get(i)+"&pssId="+pssId+"&accounts[]="+accounts_IS.get(i);
-			//System.out.println(request);
-		JSONArray ISdata = new JSONArray(readUrl(request));
+				request+="&epochsFrom[]="+epochsFrom_IS.get(i)+"&epochsTo[]="+epochsTo_IS.get(i)+"&pssId="+pssId+"&accounts[]="+accounts_IS.get(i)+"&pssName="+pssName;
+			System.out.println(request);
+		JSONArray ISdata = new JSONArray(readUrl(request.replaceAll(" ", "%20")));
 			for (int i = 0; i < ISdata.length(); i++) {
 		        result.put(ISdata.get(i));
 		    }
 			}
+			
 		} catch (Exception e) {
 			System.out.println("ERROR3");
 			e.printStackTrace();
