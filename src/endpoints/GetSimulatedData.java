@@ -2,8 +2,10 @@ package endpoints;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,14 +32,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.sun.media.jfxmedia.logging.Logger;
+import general.Server;
 
 @Path("/getSimulatedData")
 public class GetSimulatedData {
 
 	@Context
 	UriInfo ui;
-	private static DataSource condata = null;
 	public static final String err_unknown = "ERROR ";
 	public static final String err_dbconnect = "Cannot connect to database Please Try Again Later.";
 	public static final String err_cr = "Cannot connect to common repository";
@@ -79,10 +80,10 @@ public class GetSimulatedData {
 		}
 		// query = query.substring(0, query.length() - 1) + ") ";
 		query += ") order by post.id ASC";
-//		System.out.println(accounts_SIM);
-//		System.out.println(epochsFrom);
-//		System.out.println(epochsTo);
-//		System.out.println(query);
+		// System.out.println(accounts_SIM);
+		// System.out.println(epochsFrom);
+		// System.out.println(epochsTo);
+		// System.out.println(query);
 
 		JSONArray result = new JSONArray();
 		JSONObject post;
@@ -94,61 +95,36 @@ public class GetSimulatedData {
 		java.util.Date dateTo = new Date(1);
 		long postid;
 		long replyid;
-		try (Connection cndata = connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
-			int j=1;
-			for (int i = 0; i < size; i++) {
-				stmt.setString(j++, accounts_SIM.get(i));
-				dateFrom.setTime(Long.parseLong(epochsFrom_SIM.get(i)));
-				stmt.setString(j++, df.format(dateFrom));
-				dateTo.setTime(Long.parseLong(epochsTo_SIM.get(i)));
-				stmt.setString(j++, df.format(dateTo));
-			}
-			//System.out.println(stmt.toString());
-			try (ResultSet rs = stmt.executeQuery()) {
+		if (accounts_SIM.size() > 0) {
+			try (Connection cndata = Server.connlocal(); PreparedStatement stmt = cndata.prepareStatement(query);) {
+				int j = 1;
+				for (int i = 0; i < size; i++) {
+					stmt.setString(j++, accounts_SIM.get(i));
+					dateFrom.setTime(Long.parseLong(epochsFrom_SIM.get(i)));
+					stmt.setString(j++, df.format(dateFrom));
+					dateTo.setTime(Long.parseLong(epochsTo_SIM.get(i)));
+					stmt.setString(j++, df.format(dateTo));
+				}
+				// System.out.println(stmt.toString());
+				try (ResultSet rs = stmt.executeQuery()) {
 
-				if (rs.isClosed())
-					return Response.status(Response.Status.BAD_REQUEST).entity("No Simulated Posts").build();
-				while (rs.next()) {
-					post = new JSONObject();
-					replies = new JSONArray();
-					postid = rs.getLong("id");
-					post = new JSONObject();
-					post.put("postId", rs.getLong("id"));
-					post.put("source", "SIM");
-					post.put("account", rs.getString("product"));
-					post.put("location", rs.getString("location"));
-					post.put("gender", rs.getString("gender"));
-					post.put("url", "");
-					post.put("imgUrl", "");
-					post.put("userId", rs.getLong("user_id"));
-					post.put("Fname", rs.getString("name"));
-					post.put("age", rs.getLong("age"));
-
-					try {
-						date = df.parse(rs.getString("timestamp"));
-					} catch (ParseException e) {
-						System.err.println("ERROR parsing data" + rs.getString("timestamp"));
-						date = new Date(1);
-					}
-					post.put("postEpoch", date.getTime());
-					post.put("post", rs.getString("message"));
-					post.put("mediaSpecificInfo", "true");
-					post.put("likes", rs.getLong("likes"));
-					post.put("views", rs.getLong("views"));
-
-					while (rs.next() && rs.getLong("post_id") == postid) {
-						reply = new JSONObject();
-						replyid = rs.getLong("id");
-						reply.put("postId", rs.getLong("id"));
-						reply.put("source", "SIM");
-						reply.put("account", rs.getString("product"));
-						reply.put("location", rs.getString("location"));
-						reply.put("gender", rs.getString("gender"));
-						reply.put("url", "");
-						reply.put("imgUrl", "");
-						reply.put("userId", rs.getLong("user_id"));
-						reply.put("Fname", rs.getString("name"));
-						reply.put("age", rs.getLong("age"));
+					if (rs.isClosed())
+						return Response.status(Response.Status.BAD_REQUEST).entity("No Simulated Posts").build();
+					while (rs.next()) {
+						post = new JSONObject();
+						replies = new JSONArray();
+						postid = rs.getLong("id");
+						post = new JSONObject();
+						post.put("postId", rs.getLong("id"));
+						post.put("source", "SIM");
+						post.put("account", rs.getString("product"));
+						post.put("location", rs.getString("location"));
+						post.put("gender", rs.getString("gender"));
+						post.put("url", "");
+						post.put("imgUrl", "");
+						post.put("userId", rs.getLong("user_id"));
+						post.put("Fname", rs.getString("name"));
+						post.put("age", rs.getLong("age"));
 
 						try {
 							date = df.parse(rs.getString("timestamp"));
@@ -156,34 +132,89 @@ public class GetSimulatedData {
 							System.err.println("ERROR parsing data" + rs.getString("timestamp"));
 							date = new Date(1);
 						}
-						reply.put("postEpoch", date.getTime());
-						reply.put("post", rs.getString("message"));
-						reply.put("mediaSpecificInfo", "true");
-						reply.put("likes", rs.getLong("likes"));
-						reply.put("views", rs.getLong("views"));
-						reply.put("parentPostId", postid);
+						post.put("postEpoch", date.getTime());
+						post.put("post", rs.getString("message"));
+						post.put("mediaSpecificInfo", "true");
+						post.put("likes", rs.getLong("likes"));
+						post.put("views", rs.getLong("views"));
 
-						replies.put(reply);
+						while (rs.next() && rs.getLong("post_id") == postid) {
+							reply = new JSONObject();
+							replyid = rs.getLong("id");
+							reply.put("postId", rs.getLong("id"));
+							reply.put("source", "SIM");
+							reply.put("account", rs.getString("product"));
+							reply.put("location", rs.getString("location"));
+							reply.put("gender", rs.getString("gender"));
+							reply.put("url", "");
+							reply.put("imgUrl", "");
+							reply.put("userId", rs.getLong("user_id"));
+							reply.put("Fname", rs.getString("name"));
+							reply.put("age", rs.getLong("age"));
+
+							try {
+								date = df.parse(rs.getString("timestamp"));
+							} catch (ParseException e) {
+								System.err.println("ERROR parsing data" + rs.getString("timestamp"));
+								date = new Date(1);
+							}
+							reply.put("postEpoch", date.getTime());
+							reply.put("post", rs.getString("message"));
+							reply.put("mediaSpecificInfo", "true");
+							reply.put("likes", rs.getLong("likes"));
+							reply.put("views", rs.getLong("views"));
+							reply.put("parentPostId", postid);
+
+							replies.put(reply);
+						}
+						rs.absolute(rs.getRow() - 1);
+						post.put("replies", replies);
+						result.put(post);
 					}
-					rs.absolute(rs.getRow() - 1);
-					post.put("replies", replies);
-					result.put(post);
+				}
+
+			} catch (Exception e) {
+				System.out.println("ERROR3");
+				e.printStackTrace();
+			}
+		}
+		if (accounts_IS.size() > 0) {
+			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
+			for (int i = 0; i < accounts_IS.size(); i++) {
+				request += "&epochsFrom[]=" + epochsFrom_IS.get(i) + "&epochsTo[]=" + epochsTo_IS.get(i) + "&pssId="
+						+ pssId + "&accounts[]=";
+				try {
+				request+= URLEncoder.encode(accounts_IS.get(i),"UTF-8");
+				}catch(UnsupportedEncodingException e) {
+					System.out.println("Error encoding Account Name");
+					request+=accounts_IS.get(i);
+				}
+				
+			}
+			if (params.containsKey("pssId"))
+				request += "&pssId=" + params.getFirst("pssId");
+			if (params.containsKey("pssName")) {
+				request += "&pssName=";
+				try {
+				request+= URLEncoder.encode(params.getFirst("pssName"),"UTF-8").replace("+", "%20");
+				}catch(UnsupportedEncodingException e) {
+					System.out.println("Error encoding pssName");
+					request+=params.getFirst("pssName");
 				}
 			}
-			if(accounts_IS.size()>0) {
-			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
-			for(int i =0; i<accounts_IS.size();i++)
-				request+="&epochsFrom[]="+epochsFrom_IS.get(i)+"&epochsTo[]="+epochsTo_IS.get(i)+"&pssId="+pssId+"&accounts[]="+accounts_IS.get(i);
-			//System.out.println(request);
-		JSONArray ISdata = new JSONArray(readUrl(request));
-			for (int i = 0; i < ISdata.length(); i++) {
-		        result.put(ISdata.get(i));
-		    }
+			System.out.println(request);
+			JSONArray ISdata;
+			try {
+				ISdata = new JSONArray(readUrl(request));
+			} catch (Exception e) {
+				System.out.println("ERROR reading from URL");
+				ISdata = new JSONArray();
 			}
-		} catch (Exception e) {
-			System.out.println("ERROR3");
-			e.printStackTrace();
+			for (int i = 0; i < ISdata.length(); i++) {
+				result.put(ISdata.get(i));
+			}
 		}
+
 		return Response.status(Response.Status.OK).entity(result.toString()).build();
 
 	}
@@ -191,7 +222,7 @@ public class GetSimulatedData {
 	private void splitaccounts() {
 		List<String> SIM_accounts = new ArrayList<String>();
 
-		try (Connection cnlocal = connlocal();
+		try (Connection cnlocal = Server.connlocal();
 				Statement stmt = cnlocal.createStatement();
 				ResultSet rs = stmt.executeQuery(("Select distinct(product) from post"));) {
 			while (rs.next())
@@ -201,12 +232,12 @@ public class GetSimulatedData {
 			System.out.println("ERROR ON SPLIT ACCOUNTS");
 		}
 
-		for (int i=0; i<accounts.size();i++) {
+		for (int i = 0; i < accounts.size(); i++) {
 			if (SIM_accounts.contains(accounts.get(i))) {
 				accounts_SIM.add(accounts.get(i));
 				epochsFrom_SIM.add(epochsFrom.get(i));
 				epochsTo_SIM.add(epochsTo.get(i));
-				
+
 			} else {
 				accounts_IS.add(accounts.get(i));
 				epochsFrom_IS.add(epochsFrom.get(i));
@@ -244,35 +275,6 @@ public class GetSimulatedData {
 
 	}
 
-	/**
-	 * Connlocal.
-	 *
-	 * @return the connection
-	 * @throws ClassNotFoundException
-	 *             the class not found exception
-	 */
-	public static Connection connlocal() throws ClassNotFoundException, SQLException {
-		try {
-
-			if (condata == null)
-				startconnections();
-
-			Future<Connection> future = condata.getConnectionAsync();
-			while (!future.isDone()) {
-				try {
-					Thread.sleep(100); // simulate work
-				} catch (InterruptedException x) {
-					Thread.currentThread().interrupt();
-				}
-			}
-
-			return future.get(); // should return instantly
-		} catch (Exception e) {
-			System.out.println(err_dbconnect);
-			return null;
-		}
-	}
-	
 	public static String readUrl(String urlString) throws Exception {
 		BufferedReader reader = null;
 		try {
@@ -290,35 +292,5 @@ public class GetSimulatedData {
 			if (reader != null)
 				reader.close();
 		}
-	}
-
-	public static void startconnections() {
-		PoolProperties p = new PoolProperties();
-		p.setUrl("jdbc:mysql://127.0.0.1:3306/sentimentposts?autoReconnect=true&useSSL=false");
-		p.setDriverClassName("com.mysql.jdbc.Driver");
-		p.setUsername("diversity");
-		p.setPassword("!diversity!");
-		p.setJmxEnabled(true);
-		p.setTestWhileIdle(false);
-		p.setTestOnBorrow(true);
-		p.setFairQueue(true);
-		p.setValidationQuery("SELECT 1");
-		p.setTestOnReturn(false);
-		p.setValidationInterval(30000);
-		p.setTimeBetweenEvictionRunsMillis(30000);
-		p.setMaxActive(1);
-		p.setMaxIdle(1);
-		p.setInitialSize(1);
-		p.setMaxWait(10000);
-		p.setRemoveAbandonedTimeout(60);
-		p.setMinEvictableIdleTimeMillis(30000);
-		p.setMinIdle(1);
-		p.setLogAbandoned(true);
-		p.setRemoveAbandoned(true);
-		p.setJdbcInterceptors("org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
-				+ "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;"
-				+ "org.apache.tomcat.jdbc.pool.interceptor.ResetAbandonedTimer");
-		condata = new DataSource();
-		condata.setPoolProperties(p);
 	}
 }
