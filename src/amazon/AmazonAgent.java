@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,13 +34,12 @@ public class AmazonAgent {
 		url = url.replace(PAGE_NUMBER, "1");
 	}
 	
-	public String getReviews() {
-		String json = "";
+	public JSONArray getReviews() {
 		int pageNumber = 1;
 		while(true) { 
-			System.out.println("URL: " + url);
 			url = DEFAULT_URL.replace(ASIN, this.asin);
 			url = url.replace(PAGE_NUMBER, "" + pageNumber);
+			System.out.println("URL: " + url);
 			try {
 				Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36").get();
 				Elements reviewElements = doc.select(".review");
@@ -59,7 +61,7 @@ public class AmazonAgent {
 					reviews.put(id++, r);
 				
 					Elements commentElements = doc.select(".review-comment");
-					System.out.println(commentElements.html());
+//					System.out.println(commentElements.html());
 					for (Element commentElement : commentElements) {
 						Element commentAuthorElement = commentElement.select(".author").first();
 						String commentAuthor = commentAuthorElement.text();
@@ -85,6 +87,21 @@ public class AmazonAgent {
 //				e.printStackTrace();
 //			}
 		}
+		
+		JSONArray json = new JSONArray();
+		for (Review r : reviews.values()) {
+			JSONObject obj = new JSONObject();
+			try {
+				obj.put("Author", r.getAuthor());
+				obj.put("Message", r.getText());
+				obj.put("Date", r.getDate());
+				json.put(obj);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		System.out.println(json.toString());
 		return json;
 	}
 
