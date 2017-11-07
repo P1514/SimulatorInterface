@@ -3,7 +3,10 @@ package amazon;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class Review {
@@ -11,23 +14,43 @@ public class Review {
 	private String author;
 	private Date date;
 	private String text;
+	private List<Review> comments;
 	
 	public Review() {
 		this.author = "Unknown";
 		this.text = "";
+		this.comments = new ArrayList<Review>();
 	}
 	
 	public Review(String author, String text, String date) {
 		this.author = author;
 		this.text = text;
-		DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-		try {
-			this.date = format.parse(date);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		this.comments = new ArrayList<Review>();
+		handleDate(date);
+		
 	}
 	
+	private void handleDate(String value) {
+		if (value.contains("ago")) {
+			Calendar cal = Calendar.getInstance();
+			if (value.contains("days")) {
+				cal.add(Calendar.DATE, -Integer.parseInt(value.split(" ")[0]));
+			} else if (value.contains("month")) {
+				cal.add(Calendar.MONTH, -Integer.parseInt(value.split(" ")[0]));
+			} else if (value.contains("year")) {
+				cal.add(Calendar.YEAR, -Integer.parseInt(value.split(" ")[0]));
+			}
+			date = cal.getTime();
+		} else {
+			try {
+				DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+				date = format.parse(value);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public Date getDate() {
 		return date;
 	}
@@ -50,5 +73,13 @@ public class Review {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+	
+	public void addComment(Review comment) {
+		comments.add(comment);
+	}
+	
+	public List<Review> getComments() {
+		return comments;
 	}
 }
