@@ -11,6 +11,7 @@ import java.util.Locale;
 
 public class Review {
 
+	private String product;
 	private String author;
 	private Date date;
 	private long dateInEpoch;
@@ -18,16 +19,18 @@ public class Review {
 	private List<Review> comments;
 	
 	public Review() {
-		this.author = "Unknown";
+		this.author = "";
 		this.text = "";
+		this.product = "";
 		this.comments = new ArrayList<Review>();
 		this.dateInEpoch = this.date.getTime();
 	}
 	
 
-	public Review(String author, String text, String date) {
+	public Review(String author, String text, String date, String product) {
 		this.author = author;
 		this.text = text;
+		this.product = product;
 		this.comments = new ArrayList<Review>();
 		handleDate(date);
 		this.dateInEpoch = this.date.toInstant().getEpochSecond();
@@ -84,6 +87,14 @@ public class Review {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	public String getProduct() {
+		return product;
+	}
+
+	public void setProduct(String product) {
+		this.product = product;
 	}
 	
 	public void addComment(Review comment) {

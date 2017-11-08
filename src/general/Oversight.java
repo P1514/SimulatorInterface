@@ -50,18 +50,18 @@ public class Oversight extends TimerTask {
 	@Override
 	public void run() {
 		
-		while (Server.runPolarity) {
-			if (newPosts()) {
-				calculatePolarity();
-			}
-
-			try {
-				Thread.sleep(1000 * 60 * 5);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+//		while (Server.runPolarity) {
+//			if (newPosts()) {
+//				calculatePolarity();
+//			}
+//
+//			try {
+//				Thread.sleep(1000 * 60 * 5);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
 		
 		AmazonAgent c = new AmazonAgent("B005UA4FI8");
 //		c.getReviews(1427842800,1443567600);

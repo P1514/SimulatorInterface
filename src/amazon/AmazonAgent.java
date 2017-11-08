@@ -3,10 +3,15 @@ package amazon;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,6 +20,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import com.sun.media.jfxmedia.logging.Logger;
+
+import general.Server;
 
 public class AmazonAgent {
 
@@ -50,6 +59,8 @@ public class AmazonAgent {
 					break;
 				} 
 				
+				Element productElement = doc.select(".product-title").first();
+				String productText = productElement.text();
 				for (Element reviewElement : reviewElements) {
 					Element authorElement = reviewElement.select(".author").first();
 					String author = authorElement.text();
@@ -60,15 +71,15 @@ public class AmazonAgent {
 					Element dateElement = reviewElement.select(".review-date").first();
 					String date = dateElement.text().replace("on ", "");
 					
-					Review r = new Review(author, text, date);
+					Review r = new Review(author, text, date, productText);
 					
 					if ((start == -1 || r.getDateInEpoch() >= start) && (finish == -1 || r.getDateInEpoch() <= finish)) {
 						reviews.put(id++, r);
 					} 
 					
-//					Elements commentElements = doc.select(".review-comment");
 					
-//					this will not work because we need to click "comments" for the page to load the replies, which isnt possible with jsoup
+//					this will not work because we need to click "comments" for the page to load the replies, which isnt possible with Jsoup :(
+//					Elements commentElements = doc.select(".review-comment");
 //					for (Element commentElement : commentElements) {
 //						Element commentAuthorElement = commentElement.select(".author").first();
 //						String commentAuthor = commentAuthorElement.text();
@@ -102,9 +113,46 @@ public class AmazonAgent {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Reviews: " + reviews.size());
+		System.out.println("Amazon Reviews: " + reviews.size());
+		
 		System.out.println(json.toString());
 		return json;
 	}
 
+	public void store() {
+		String sqlPost = "INSERT INTO sentimentposts.post VALUES (?,?,?,?,?,?,?);";
+		String sqlUser = "INSERT INTO sentimentposts.user VALUES (?,?,?,?);";
+		for (Review r : reviews.values()) {
+			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlPost)){
+				System.out.println("Executing: " + insert.toString());
+				insert.setTimestamp(1, new Timestamp(r.getDateInEpoch()));
+				insert.setString(2, r.getText());
+				insert.setInt(3, 0);
+				insert.setString(4, "0");
+				insert.setInt(5, 1); //TODO: get user id 
+				insert.setString(6, r.getProduct()); //TODO: fix product name?
+				insert.setNull(7, java.sql.Types.BIGINT);
+				insert.executeUpdate();
+	
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e1) {
+				e1.printStackTrace();
+			}
+			
+			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlUser)){
+				System.out.println("Executing: " + insert.toString());
+				insert.setString(1, r.getAuthor());
+				insert.setNull(2, java.sql.Types.INTEGER);
+				insert.setNull(3, java.sql.Types.VARCHAR);
+				insert.setNull(4, java.sql.Types.VARCHAR);
+				insert.executeUpdate();
+	
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
 }
