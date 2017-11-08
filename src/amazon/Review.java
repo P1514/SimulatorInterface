@@ -13,6 +13,7 @@ public class Review {
 
 	private String author;
 	private Date date;
+	private long dateInEpoch;
 	private String text;
 	private List<Review> comments;
 	
@@ -20,14 +21,16 @@ public class Review {
 		this.author = "Unknown";
 		this.text = "";
 		this.comments = new ArrayList<Review>();
+		this.dateInEpoch = this.date.getTime();
 	}
 	
+
 	public Review(String author, String text, String date) {
 		this.author = author;
 		this.text = text;
 		this.comments = new ArrayList<Review>();
 		handleDate(date);
-		
+		this.dateInEpoch = this.date.toInstant().getEpochSecond();
 	}
 	
 	private void handleDate(String value) {
@@ -49,6 +52,14 @@ public class Review {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public long getDateInEpoch() {
+		return dateInEpoch;
+	}
+	
+	public void setDateInEpoch(long dateInEpoch) {
+		this.dateInEpoch = dateInEpoch;
 	}
 
 	public Date getDate() {

@@ -34,15 +34,18 @@ public class AmazonAgent {
 		url = url.replace(PAGE_NUMBER, "1");
 	}
 	
-	public JSONArray getReviews() {
+	public JSONArray getReviews(long start, long finish) {
 		int pageNumber = 1;
+		
 		while(true) { 
 			url = DEFAULT_URL.replace(ASIN, this.asin);
 			url = url.replace(PAGE_NUMBER, "" + pageNumber);
 			System.out.println("URL: " + url);
 			try {
-				Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36").get();
+				Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36").get();
 				Elements reviewElements = doc.select(".review");
+//				if no posts are found, uncomment the next line to check if we're getting a captcha
+//				System.out.println(doc.html());
 				if (reviewElements == null || reviewElements.isEmpty()) {
 					break;
 				} 
@@ -58,34 +61,32 @@ public class AmazonAgent {
 					String date = dateElement.text().replace("on ", "");
 					
 					Review r = new Review(author, text, date);
-					reviews.put(id++, r);
-				
-					Elements commentElements = doc.select(".review-comment");
-//					System.out.println(commentElements.html());
-					for (Element commentElement : commentElements) {
-						Element commentAuthorElement = commentElement.select(".author").first();
-						String commentAuthor = commentAuthorElement.text();
-						
-						Element commentTextElement = commentElement.select(".review-comment-text").first();
-						String commentText = commentTextElement.text();
-						
-						Element commentDateElement = commentElement.select(".comment-time-stamp").first();
-						String commentDate = commentDateElement.text().replace("on ", "");
-						Review comment = new Review(commentAuthor, commentText, commentDate);
-						r.addComment(comment);
-					}
+					
+					if ((start == -1 || r.getDateInEpoch() >= start) && (finish == -1 || r.getDateInEpoch() <= finish)) {
+						reviews.put(id++, r);
+					} 
+					
+//					Elements commentElements = doc.select(".review-comment");
+					
+//					this will not work because we need to click "comments" for the page to load the replies, which isnt possible with jsoup
+//					for (Element commentElement : commentElements) {
+//						Element commentAuthorElement = commentElement.select(".author").first();
+//						String commentAuthor = commentAuthorElement.text();
+//						
+//						Element commentTextElement = commentElement.select(".review-comment-text").first();
+//						String commentText = commentTextElement.text();
+//						
+//						Element commentDateElement = commentElement.select(".comment-time-stamp").first();
+//						String commentDate = commentDateElement.text().replace("on ", "");
+//						Review comment = new Review(commentAuthor, commentText, commentDate);
+//						r.addComment(comment);
+//					}
 				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			pageNumber++;
-//			try {
-//				Thread.sleep(500);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 		}
 		
 		JSONArray json = new JSONArray();
@@ -101,6 +102,7 @@ public class AmazonAgent {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Reviews: " + reviews.size());
 		System.out.println(json.toString());
 		return json;
 	}
