@@ -1,5 +1,11 @@
 package general;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -49,25 +55,28 @@ public class TwitterAgent {
 		User twitterUser = null;
 		Paging p = new Paging();
 		p.setCount(1000);
-		Query query = new Query();;
+		Query query = new Query();
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		QueryResult queryresult;
 		long currentPostEpoch = 0;
 		List<Status> results;
 		JSONArray output = new JSONArray();
-		query.setQuery("from:"+account);
-		//query.setQuery("source:"+ account);
-        query.setCount(1000);
-        
+		account = account.substring(1, account.length() - 1);
+		query.setQuery("@" + account);
+		// query.setQuery("source:"+ account);
+		query.setCount(1000);
 		try {
 
-			queryresult = this.getTwitter().search(query);
-			//results = twitter.getUserTimeline("@"+account,p);
+			// results = twitter.getUserTimeline("@"+account,p);
+			Logger.getLogger(TwitterAgent.class.getName()).info("Getting Posts From Twitter, Please Wait...");
 			do {
-				
+
+				query.setCount(1000);
+				queryresult = this.getTwitter().search(query);
 				results = queryresult.getTweets();
-				
+
 				if (results == null || results.isEmpty()) {
-					//TODO
+					// TODO
 				}
 
 				for (Status status : results) {
@@ -77,6 +86,7 @@ public class TwitterAgent {
 
 					JSONObject out = new JSONObject();
 					out.put("source", "twitter");
+					out.put("user_id", twitterUser.getId());
 					out.put("Fname", twitterUser.getName());
 					out.put("age", "");
 					out.put("gender", "");
@@ -89,10 +99,43 @@ public class TwitterAgent {
 					out.put("imgUrl", "");// take care
 					out.put("postEpoch", currentPostEpoch);
 					out.put("post", status.getText());
-					output.put(out);
+
+					try (Connection cnlocal = Server.connlocal();
+							PreparedStatement ps = cnlocal.prepareStatement(
+									"INSERT IGNORE INTO `sentimentposts`.`user` (`id`, `name`, `location`) VALUES (?, ?, ?)")) {
+						ps.setLong(1, twitterUser.getId());
+						ps.setString(2, twitterUser.getName());
+						ps.setString(3, twitterUser.getLocation());
+						ps.execute();
+
+					} catch (SQLException | ClassNotFoundException e) {
+						Logger.getLogger(TwitterAgent.class.getName()).severe(e.getMessage());
 					}
-				Thread.sleep(10000);
-		} while ((query = queryresult.nextQuery()) != null);
+
+					try (Connection cnlocal = Server.connlocal();
+							PreparedStatement ps1 = cnlocal.prepareStatement(
+									"INSERT INTO `sentimentposts`.`post` (`id`, `timestamp`, `message`, `likes`, `views`, `user_id`, `product`) VALUES (?, ?, ?, ?, ?, ?, ?) on duplicate key update\n"
+											+ "message=?, likes=?, views=?;")) {
+						ps1.setLong(1, status.getId());
+						ps1.setString(2, df.format(currentPostEpoch));
+						ps1.setString(3, status.getText());
+						ps1.setLong(4, status.getFavoriteCount());
+						ps1.setLong(5, status.getRetweetCount());
+						ps1.setLong(6, twitterUser.getId());
+						ps1.setString(7, account);
+						ps1.setString(8, status.getText());
+						ps1.setLong(9, status.getFavoriteCount());
+						ps1.setLong(10, status.getRetweetCount());
+						ps1.execute();
+
+					} catch (SQLException | ClassNotFoundException e) {
+						Logger.getLogger(TwitterAgent.class.getName()).severe(e.getMessage());
+					}
+
+					output.put(out);
+				}
+				Thread.sleep(1000);
+			} while ((query = queryresult.nextQuery()) != null);
 			Logger.getLogger(TwitterAgent.class.getName()).log(Level.INFO, "Posts were retrieved! Total: "
 					+ output.length() + " Last Epoch Time: " + currentPostEpoch + " Epoch Date:  {0}",
 					new Date(currentPostEpoch).toString());
