@@ -63,6 +63,8 @@ public class Oversight extends TimerTask {
 //			}
 //		}
 		
+		AmazonAgent.registerAccount("B005UA4FI8");
+		
 		AmazonAgent c = new AmazonAgent("B005UA4FI8");
 //		c.getReviews(1427842800,1443567600);
 		c.getReviews(-1, -1); //gets all reviews

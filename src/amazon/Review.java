@@ -12,9 +12,10 @@ import java.util.Locale;
 
 public class Review {
 
-	private BigInteger id;
+	private Long id;
 	private String product;
 	private String author;
+	private long authorId;
 	private Date date;
 	private long dateInEpoch;
 	private String text;
@@ -30,9 +31,10 @@ public class Review {
 	}
 	
 
-	public Review(BigInteger id, String author, String text, String date, String product) {
+	public Review(Long id, String author, long authorId, String text, String date, String product) {
 		this.id = id;
 		this.author = author;
+		this.setAuthorId(authorId);
 		this.text = text;
 		this.product = product;
 		this.comments = new ArrayList<Review>();
@@ -110,12 +112,22 @@ public class Review {
 	}
 
 
-	public BigInteger getId() {
+	public Long getId() {
 		return id;
 	}
 
 
-	public void setId(BigInteger id) {
+	public void setId(Long id) {
 		this.id = id;
+	}
+
+
+	public long getAuthorId() {
+		return authorId;
+	}
+
+
+	public void setAuthorId(long authorId) {
+		this.authorId = authorId;
 	}
 }
