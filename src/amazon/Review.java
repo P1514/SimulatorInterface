@@ -1,5 +1,6 @@
 package amazon;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,6 +12,7 @@ import java.util.Locale;
 
 public class Review {
 
+	private BigInteger id;
 	private String product;
 	private String author;
 	private Date date;
@@ -24,10 +26,12 @@ public class Review {
 		this.product = "";
 		this.comments = new ArrayList<Review>();
 		this.dateInEpoch = this.date.getTime();
+		this.id = null;
 	}
 	
 
-	public Review(String author, String text, String date, String product) {
+	public Review(BigInteger id, String author, String text, String date, String product) {
+		this.id = id;
 		this.author = author;
 		this.text = text;
 		this.product = product;
@@ -103,5 +107,15 @@ public class Review {
 	
 	public List<Review> getComments() {
 		return comments;
+	}
+
+
+	public BigInteger getId() {
+		return id;
+	}
+
+
+	public void setId(BigInteger id) {
+		this.id = id;
 	}
 }

@@ -3,6 +3,7 @@ package amazon;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -43,7 +44,7 @@ public class AmazonAgent {
 		url = url.replace(PAGE_NUMBER, "1");
 	}
 	
-	public JSONArray getReviews(long start, long finish) {
+	public void getReviews(long start, long finish) {
 		int pageNumber = 1;
 		
 		while(true) { 
@@ -71,7 +72,11 @@ public class AmazonAgent {
 					Element dateElement = reviewElement.select(".review-date").first();
 					String date = dateElement.text().replace("on ", "");
 					
-					Review r = new Review(author, text, date, productText);
+					String reviewId = reviewElement.attr("id");
+					System.out.println("String: " + reviewId);
+					BigInteger convertedId = convertToNumber(reviewId);
+					System.out.println("Converted: " + convertedId);
+					Review r = new Review(convertedId, author, text, date, productText);
 					
 					if ((start == -1 || r.getDateInEpoch() >= start) && (finish == -1 || r.getDateInEpoch() <= finish)) {
 						reviews.put(id++, r);
@@ -100,38 +105,41 @@ public class AmazonAgent {
 			pageNumber++;
 		}
 		
-		JSONArray json = new JSONArray();
-		for (Review r : reviews.values()) {
-			JSONObject obj = new JSONObject();
-			try {
-				obj.put("Author", r.getAuthor());
-				obj.put("Message", r.getText());
-				obj.put("Date", r.getDate());
-				json.put(obj);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+//		JSONArray json = new JSONArray();
+//		for (Review r : reviews.values()) {
+//			JSONObject obj = new JSONObject();
+//			try {
+//				obj.put("Author", r.getAuthor());
+//				obj.put("Message", r.getText());
+//				obj.put("Date", r.getDate());
+//				json.put(obj);
+//			} catch (JSONException e) {
+//				e.printStackTrace();
+//			}
+//		}
 		System.out.println("Amazon Reviews: " + reviews.size());
 		
-		System.out.println(json.toString());
-		return json;
+//		System.out.println(json.toString());
+//		return json;
 	}
 
 	public void store() {
-		String sqlPost = "INSERT INTO sentimentposts.post VALUES (?,?,?,?,?,?,?);";
-		String sqlUser = "INSERT INTO sentimentposts.user VALUES (?,?,?,?);";
+		System.out.println("Storing data into database...");
+		String sqlPost = "INSERT INTO sentimentposts.post VALUES (?,?,?,?,?,?,?,?);";
+		String sqlUser = "INSERT INTO sentimentposts.user (id, name, age, gender, location) VALUES (?,?,?,?,?);";
+		int uId = 5000;
+
 		for (Review r : reviews.values()) {
 			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlPost)){
-				System.out.println("Executing: " + insert.toString());
-				insert.setTimestamp(1, new Timestamp(r.getDateInEpoch()));
-				insert.setString(2, r.getText());
-				insert.setInt(3, 0);
-				insert.setString(4, "0");
-				insert.setInt(5, 1); //TODO: get user id 
-				insert.setString(6, r.getProduct()); //TODO: fix product name?
-				insert.setNull(7, java.sql.Types.BIGINT);
+				insert.setLong(1, r.getId().longValue());
+				insert.setTimestamp(2, new Timestamp(r.getDateInEpoch()));
+				insert.setString(3, r.getText());
+				insert.setInt(4, 0);
+				insert.setString(5, "0");
+				insert.setInt(6, 1); //TODO: get user id 
+				insert.setString(7, r.getProduct()); //TODO: fix product name?
+				insert.setNull(8, java.sql.Types.BIGINT);
+//				System.out.println("Executing: " + insert.toString());
 				insert.executeUpdate();
 	
 			} catch (SQLException e) {
@@ -140,13 +148,14 @@ public class AmazonAgent {
 				e1.printStackTrace();
 			}
 			
-			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlUser)){
-				System.out.println("Executing: " + insert.toString());
-				insert.setString(1, r.getAuthor());
-				insert.setNull(2, java.sql.Types.INTEGER);
-				insert.setNull(3, java.sql.Types.VARCHAR);
-				insert.setNull(4, java.sql.Types.VARCHAR);
-				insert.executeUpdate();
+			try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert2 = cnlocal2.prepareStatement(sqlUser)){
+				insert2.setLong(1, uId++);
+				insert2.setString(2, r.getAuthor());
+				insert2.setNull(3, java.sql.Types.INTEGER);
+				insert2.setNull(4, java.sql.Types.VARCHAR);
+				insert2.setNull(5, java.sql.Types.VARCHAR);
+//				System.out.println("Executing: " + insert2.toString());
+				insert2.executeUpdate();
 	
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -154,5 +163,22 @@ public class AmazonAgent {
 				e1.printStackTrace();
 			}
 		}
+		System.out.println("Finished storing data.");
+	}
+	
+	private BigInteger convertToNumber(String text) {
+		StringBuilder sb = new StringBuilder();
+		
+	    for (char c : text.toCharArray()) {
+	    	if (Character.isDigit(c)) {
+	    		sb.append(c);
+	    	} else {
+	    		sb.append((int)c);
+	    	}
+	    }
+	    
+	    BigInteger b = new BigInteger(sb.toString());
+	    
+	    return b;
 	}
 }
