@@ -146,6 +146,7 @@ public class AmazonAgent {
 
 			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlPost)){
 				insert.setLong(1, r.getId().longValue());
+				System.out.println("Date: " + r.getDate() + " Epoch: " + r.getDateInEpoch());
 				insert.setTimestamp(2, new Timestamp(r.getDateInEpoch()));
 				insert.setString(3, r.getText());
 				insert.setInt(4, 0);
@@ -216,10 +217,11 @@ public class AmazonAgent {
 		}
 
 		if (count == 0) {
-			String sql2 = "INSERT INTO sentimentposts.accounts VALUES (?, ?);";
+			String sql2 = "INSERT INTO sentimentposts.accounts VALUES (?, ?, ?);";
 			try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert = cnlocal2.prepareStatement(sql2)){
 				insert.setString(1, "Amazon");
 				insert.setString(2, account);
+				insert.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
 				insert.executeUpdate();
 			} catch (SQLException e) {
 				e.printStackTrace();

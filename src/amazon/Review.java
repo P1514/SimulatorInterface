@@ -39,7 +39,7 @@ public class Review {
 		this.product = product;
 		this.comments = new ArrayList<Review>();
 		handleDate(date);
-		this.dateInEpoch = this.date.toInstant().getEpochSecond();
+		this.dateInEpoch = this.date.toInstant().getEpochSecond() * 1000;
 	}
 	
 	private void handleDate(String value) {
