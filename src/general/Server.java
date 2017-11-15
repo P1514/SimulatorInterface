@@ -29,9 +29,10 @@ public class Server {
 	 */
 	public static Connection connlocal() throws ClassNotFoundException, SQLException {
 		try {
-			if (condata == null)
+
+
+			while(conlocal==null) //Thread.sleep(1000);
 				startconnections();
-			while(conlocal==null) Thread.sleep(1000);
 
 			Future<Connection> future = conlocal.getConnectionAsync();
 			while (!future.isDone()) {
