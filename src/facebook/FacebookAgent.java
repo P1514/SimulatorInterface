@@ -208,7 +208,7 @@ public class FacebookAgent {
 		do {
 			if (posts.size() == 0)
 				break;
-			System.out.println("Post Nº " + (i++ - 1));
+			//System.out.println("Post Nº " + (i++ - 1));
 			Post post = posts.get(0);
 			post_page = posts.getPaging();
 			MyPost localpost = new MyPost(post, account);
@@ -224,7 +224,7 @@ public class FacebookAgent {
 				}
 
 				comm_page = comments.getPaging();
-				System.out.println("Comment Nº " + ii + "Date: " + localpost.getDate());
+				//System.out.println("Comment Nº " + ii + "Date: " + localpost.getDate());
 				if (comm_page.getNext() == null)
 					break;
 				while (true) {
