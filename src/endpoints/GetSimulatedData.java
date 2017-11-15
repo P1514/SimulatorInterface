@@ -32,7 +32,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import general.Server;
+import general.*;
 
 @Path("/getSimulatedData")
 public class GetSimulatedData {
@@ -65,7 +65,7 @@ public class GetSimulatedData {
 	 */
 	@GET
 	@Produces(MediaType.TEXT_HTML)
-	public Response welcome() throws JSONException, SQLException {
+	public Response welcome() throws JSONException, SQLException {		
 		MultivaluedMap<String, String> params = ui.getQueryParameters();
 		if (!verifyparams(params))
 			return Response.status(Response.Status.BAD_REQUEST).build();
@@ -179,7 +179,7 @@ public class GetSimulatedData {
 			}
 		}
 		if (accounts_IS.size() > 0) {
-			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
+			String request = "http://opennebula.euprojects.net/intelligent-search/getFeedback?";
 			for (int i = 0; i < accounts_IS.size(); i++) {
 				request += "&epochsFrom[]=" + epochsFrom_IS.get(i) + "&epochsTo[]=" + epochsTo_IS.get(i) + "&pssId="
 						+ pssId + "&accounts[]=";
