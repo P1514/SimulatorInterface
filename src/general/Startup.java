@@ -11,6 +11,10 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
+import org.json.JSONException;
+
+import amazon.AmazonAgent;
+
 import java.sql.Connection;
 
 import facebook.*;
@@ -40,7 +44,25 @@ public class Startup implements ServletContextListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}// all done
-		//new FacebookAgent().fetch();
+
+		AmazonAgent.registerAccount("B005UA4FI8");
+		TwitterAgent.registerAccount("nike");
+		FacebookAgent.add_account("airforce1");
+		
+		
+		try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		AmazonAgent.fetch();
+		
+		TwitterAgent.fetch();
+		
+		FacebookAgent.fetch();
+		
 		//new Oversight();
 		TwitterAgent twitter = new TwitterAgent();
 		twitter.fetch();
