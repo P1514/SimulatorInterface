@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -67,7 +68,7 @@ public class TwitterAgent {
 		long currentPostEpoch = 0;
 		List<Status> results;
 		JSONArray output = new JSONArray();
-		account = account.substring(1, account.length() - 1);
+		// account = account.substring(1, account.length() - 1);
 		int page = 1;
 		query.setQuery("@" + account);
 		query.setCount(100);
@@ -115,10 +116,18 @@ public class TwitterAgent {
 
 						try (Connection cnlocal = Server.connlocal();
 								PreparedStatement ps = cnlocal.prepareStatement(
-										"INSERT IGNORE INTO `sentimentposts`.`user` (`id`, `name`, `location`) VALUES (?, ?, ?)")) {
+										"INSERT INTO `sentimentposts`.`user` (`id`, `name`, `location`) VALUES (?, ?, ?) on duplicate key update name=?, location=?")) {
 							ps.setLong(1, twitterUser.getId());
 							ps.setString(2, twitterUser.getName());
-							ps.setString(3, twitterUser.getLocation());
+							if (twitterUser.getLocation().length() > 90)
+								ps.setString(3, twitterUser.getLocation().substring(0, 89));
+							else
+								ps.setString(3, twitterUser.getLocation());
+							ps.setString(4, twitterUser.getName());
+							if (twitterUser.getLocation().length() > 90)
+								ps.setString(5, twitterUser.getLocation().substring(0, 89));
+							else
+								ps.setString(5, twitterUser.getLocation());
 							ps.execute();
 
 						} catch (SQLException | ClassNotFoundException e) {
@@ -176,10 +185,46 @@ public class TwitterAgent {
 			} catch (TwitterException ex) {
 				Logger.getLogger(TwitterAgent.class.getName()).severe(ex.getMessage());
 			}
-		Logger.getLogger(TwitterAgent.class.getName()).log(Level.INFO, "Posts were retrieved! Total: " + output.length()
-				+  " Last Date:  {0}", new Date(currentPostEpoch).toString());
+		Logger.getLogger(TwitterAgent.class.getName()).log(Level.INFO,
+				"Posts were retrieved! Total: " + output.length() + " Last Date:  {0}",
+				new Date(currentPostEpoch).toString());
 		return output;
 
+	}
+
+	public static boolean registerAccount(String account) {
+		int count = 0;
+		String sql = "SELECT COUNT(*) FROM sentimentposts.accounts WHERE source LIKE 'Twitter' AND account LIKE ?;";
+		try (Connection cnlocal = Server.connlocal(); PreparedStatement select = cnlocal.prepareStatement(sql)) {
+			select.setString(1, account);
+			try (ResultSet rs = select.executeQuery()) {
+				while (rs.next()) {
+					count = rs.getInt(1);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+		if (count == 0) {
+			String sql2 = "INSERT INTO sentimentposts.accounts VALUES (?, ?, ?);";
+			try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert = cnlocal2.prepareStatement(sql2)) {
+				insert.setString(1, "Twitter");
+				insert.setString(2, account);
+				insert.setTimestamp(3, new Timestamp(1));
+				insert.executeUpdate();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e1) {
+				e1.printStackTrace();
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 }
