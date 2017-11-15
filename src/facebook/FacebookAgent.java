@@ -21,21 +21,22 @@ import facebook4j.FacebookResponse.Metadata.Fields.Field;
 import general.Server;
 
 public class FacebookAgent {
-	Facebook facebook;
-	private String appId = "appId";
-	private String appSecret = "appSecret";
-	private String permissions = "";
-	private String accessToken = appId + "|" + appSecret;
-
-	public FacebookAgent() {
+	private static Facebook facebook = null;
+	private static String appId = "appId";
+	private static String appSecret = "appSecret";
+	//private String permissions = "";
+	private static String accessToken = appId + "|" + appSecret;
+	
+	private static void init_facebook() {
 		facebook = new FacebookFactory().getInstance();
 		facebook.setOAuthAppId(appId, appSecret);
 		facebook.setOAuthAccessToken(new facebook4j.auth.AccessToken(accessToken, null));
-
 	}
 
-	public boolean add_account(String account) {
-
+	public static boolean add_account(String account) {
+		if(facebook==null) {
+			init_facebook();
+		}
 		try {
 			facebook.getPage(account, new Reading().limit(1));
 		} catch (FacebookException e) {
@@ -62,7 +63,10 @@ public class FacebookAgent {
 		return true;
 	}
 
-	public void fetch() {
+	public static void fetch() {
+		if(facebook==null) {
+			init_facebook();
+		}
 		ArrayList<String> accounts = new ArrayList<String>();
 		ArrayList<String> dates = new ArrayList<String>();
 		Calendar cal = Calendar.getInstance();
@@ -97,7 +101,7 @@ public class FacebookAgent {
 
 	}
 
-	public void to_DB(String date, String account) {
+	private static void to_DB(String date, String account) {
 		try (Connection cnlocal = Server.connlocal();
 				PreparedStatement ps = cnlocal.prepareStatement(
 						"Insert into user values(?,?,0,'No Info','No Info') ON DUPLICATE KEY UPDATE name=?")) {
@@ -174,7 +178,7 @@ public class FacebookAgent {
 		FacebookUtil.clearMaps();
 	}
 
-	private void getData(Date sincedate, String account) {
+	private static void getData(Date sincedate, String account) {
 
 		String fields = "comments.limit(900){like_count,id,message,created_time,from},";
 		fields += "message,";
