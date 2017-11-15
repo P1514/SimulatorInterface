@@ -51,6 +51,7 @@ public class FacebookAgent {
 				PreparedStatement stmt = cnlocal.prepareStatement(
 						"Insert into accounts values ('Facebook',?,?) ON DUPLICATE KEY UPDATE source='Facebook'")) {
 			stmt.setString(1, account);
+			stmt.setString(2, "2000-01-01 00:00:01");
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			// System.err.println("Error Code: " + e.getErrorCode() + " Message: " +
