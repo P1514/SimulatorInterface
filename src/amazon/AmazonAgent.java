@@ -50,6 +50,7 @@ public class AmazonAgent {
 		int pageNumber = 1;
 
 		System.out.println("Getting reviews...");
+		update();
 		while(true) { 
 			url = DEFAULT_URL.replace(ASIN, this.asin);
 			url = url.replace(PAGE_NUMBER, "" + pageNumber);
@@ -146,7 +147,6 @@ public class AmazonAgent {
 
 			try (Connection cnlocal = Server.connlocal(); PreparedStatement insert = cnlocal.prepareStatement(sqlPost)){
 				insert.setLong(1, r.getId().longValue());
-				System.out.println("Date: " + r.getDate() + " Epoch: " + r.getDateInEpoch());
 				insert.setTimestamp(2, new Timestamp(r.getDateInEpoch()));
 				insert.setString(3, r.getText());
 				insert.setInt(4, 0);
@@ -233,5 +233,39 @@ public class AmazonAgent {
 		}
 		
 		return false;
+	}
+	
+	private void update() {
+		String sql2 = "UPDATE sentimentposts.accounts SET last_update = ?  WHERE source LIKE ? AND account LIKE ?";
+		try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert = cnlocal2.prepareStatement(sql2)){
+			insert.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+			insert.setString(2, "Amazon");
+			insert.setString(3, asin);
+			insert.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	public static Timestamp getLastUpdate(String account) {
+		String sql = "SELECT last_update FROM sentimentposts.accounts WHERE source LIKE 'Amazon' AND account LIKE ?;";
+		
+		Timestamp t = null;
+		try (Connection cnlocal = Server.connlocal(); PreparedStatement select = cnlocal.prepareStatement(sql)){
+			select.setString(1, account);
+			try (ResultSet rs = select.executeQuery()) {
+				while (rs.next()) {
+					t = rs.getTimestamp(1);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
+		return t;
 	}
 }
