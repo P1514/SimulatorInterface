@@ -50,6 +50,7 @@ public class Oversight extends TimerTask {
 	@Override
 	public void run() {
 		
+
 		while (Server.runPolarity) {
 			if (newPosts()) {
 				calculatePolarity();
@@ -62,6 +63,7 @@ public class Oversight extends TimerTask {
 				e.printStackTrace();
 			}
 		}
+
 	}
 
 	private void calculatePolarity() {
