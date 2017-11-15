@@ -1,15 +1,15 @@
 package facebook;
 
 public class MyAuthor {
-	private Long id;
+	private long id;
 	private String name;
 	
-	public MyAuthor (Long _id, String _name) {
+	public MyAuthor (long _id, String _name) {
 		id=_id;
-		name=_name;
+		name=_name.trim();
 	}
 	
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 	

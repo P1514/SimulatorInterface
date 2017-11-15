@@ -85,9 +85,9 @@ public class Server {
 		p.setTestOnReturn(false);
 		p.setValidationInterval(30000);
 		p.setTimeBetweenEvictionRunsMillis(30000);
-		p.setMaxActive(1);
-		p.setMaxIdle(1);
-		p.setInitialSize(1);
+		p.setMaxActive(10);
+		p.setMaxIdle(10);
+		p.setInitialSize(10);
 		p.setMaxWait(10000);
 		p.setRemoveAbandonedTimeout(60);
 		p.setMinEvictableIdleTimeMillis(30000);
@@ -113,9 +113,9 @@ public class Server {
 		p.setTestOnReturn(false);
 		p.setValidationInterval(30000);
 		p.setTimeBetweenEvictionRunsMillis(30000);
-		p.setMaxActive(1);
-		p.setMaxIdle(1);
-		p.setInitialSize(1);
+		p.setMaxActive(10);
+		p.setMaxIdle(10);
+		p.setInitialSize(10);
 		p.setMaxWait(10000);
 		p.setRemoveAbandonedTimeout(60);
 		p.setMinEvictableIdleTimeMillis(30000);
