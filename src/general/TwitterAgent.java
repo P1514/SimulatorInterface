@@ -17,6 +17,7 @@ import org.json.JSONObject;
 import twitter4j.*;
 import twitter4j.Query.ResultType;
 import twitter4j.conf.*;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class TwitterAgent {
 
@@ -57,6 +58,10 @@ public class TwitterAgent {
 		Paging p = new Paging();
 		p.setCount(1000);
 		Query query = new Query();
+		Query query1 = new Query();
+		Query query2 = new Query();
+		Query query3 = new Query();
+		Query queryArr[] = { query, query1, query2, query3 };
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		QueryResult queryresult;
 		long currentPostEpoch = 0;
@@ -64,19 +69,28 @@ public class TwitterAgent {
 		JSONArray output = new JSONArray();
 		account = account.substring(1, account.length() - 1);
 		int page = 1;
-			query.setQuery(account);
-			query.setCount(100);
-			query.setResultType(Query.ResultType.recent);
+		query.setQuery("@" + account);
+		query.setCount(100);
+		query.setResultType(Query.ResultType.recent);
+		query1.setQuery(account);
+		query1.setCount(100);
+		query1.setResultType(Query.ResultType.recent);
+		query2.setQuery(account);
+		query2.setCount(100);
+		query2.setResultType(Query.ResultType.popular);
+		query3.setQuery("@" + account);
+		query3.setCount(100);
+		query3.setResultType(Query.ResultType.popular);
+		for (Query currentQuery : queryArr)
 			try {
-
-				// results = twitter.getUserTimeline("@"+account,p);
 				Logger.getLogger(TwitterAgent.class.getName()).info("Getting posts from twitter, please wait...");
 				do {
-					query.setMaxId(-1);
-					Logger.getLogger(TwitterAgent.class.getName()).info("Getting page: "+page);
-					queryresult = this.getTwitter().search(query);
+					currentQuery.setMaxId(-1);
+					Logger.getLogger(TwitterAgent.class.getName())
+							.info("Getting " + currentQuery.getResultType().toString() + " posts from "
+									+ currentQuery.getQuery() + " currentpage: " + page);
+					queryresult = this.getTwitter().search(currentQuery);
 					results = queryresult.getTweets();
-
 
 					for (Status status : results) {
 
@@ -158,17 +172,12 @@ public class TwitterAgent {
 					}
 					Thread.sleep(1000);
 					page++;
-				} while ((query = queryresult.nextQuery()) != null);
-
-				Logger.getLogger(TwitterAgent.class.getName())
-						.log(Level.INFO,
-								"Posts were retrieved! Total: " + output.length() + " Last Epoch Time: "
-										+ currentPostEpoch + " Epoch Date:  {0}",
-								new Date(currentPostEpoch).toString());
+				} while ((currentQuery = queryresult.nextQuery()) != null);
 			} catch (TwitterException ex) {
 				Logger.getLogger(TwitterAgent.class.getName()).severe(ex.getMessage());
 			}
-		
+		Logger.getLogger(TwitterAgent.class.getName()).log(Level.INFO, "Posts were retrieved! Total: " + output.length()
+				+  " Last Date:  {0}", new Date(currentPostEpoch).toString());
 		return output;
 
 	}
