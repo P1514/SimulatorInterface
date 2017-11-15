@@ -221,7 +221,7 @@ public class AmazonAgent {
 			try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert = cnlocal2.prepareStatement(sql2)){
 				insert.setString(1, "Amazon");
 				insert.setString(2, account);
-				insert.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+				insert.setTimestamp(3, new Timestamp(1));
 				insert.executeUpdate();
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -238,7 +238,7 @@ public class AmazonAgent {
 	private void update() {
 		String sql2 = "UPDATE sentimentposts.accounts SET last_update = ?  WHERE source LIKE ? AND account LIKE ?";
 		try (Connection cnlocal2 = Server.connlocal(); PreparedStatement insert = cnlocal2.prepareStatement(sql2)){
-			insert.setTimestamp(1, new Timestamp(1));
+			insert.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 			insert.setString(2, "Amazon");
 			insert.setString(3, asin);
 			insert.executeUpdate();
