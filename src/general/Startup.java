@@ -44,6 +44,7 @@ public class Startup implements ServletContextListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}// all done
+
 		AmazonAgent.registerAccount("B005UA4FI8");
 		TwitterAgent.registerAccount("nike");
 		FacebookAgent.add_account("airforce1");
@@ -63,6 +64,8 @@ public class Startup implements ServletContextListener {
 		FacebookAgent.fetch();
 		
 		//new Oversight();
+		TwitterAgent twitter = new TwitterAgent();
+		twitter.fetch();
 	}
 
 	/*

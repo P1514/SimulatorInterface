@@ -21,22 +21,21 @@ import facebook4j.FacebookResponse.Metadata.Fields.Field;
 import general.Server;
 
 public class FacebookAgent {
-	private static Facebook facebook = null;
-	private static String appId = "appId";
-	private static String appSecret = "appSecret";
-	//private String permissions = "";
-	private static String accessToken = appId + "|" + appSecret;
-	
-	private static void init_facebook() {
+	Facebook facebook;
+	private String appId = "appId";
+	private String appSecret = "appSecret";
+	private String permissions = "";
+	private String accessToken = appId + "|" + appSecret;
+
+	public FacebookAgent() {
 		facebook = new FacebookFactory().getInstance();
 		facebook.setOAuthAppId(appId, appSecret);
 		facebook.setOAuthAccessToken(new facebook4j.auth.AccessToken(accessToken, null));
+
 	}
 
-	public static boolean add_account(String account) {
-		if(facebook==null) {
-			init_facebook();
-		}
+	public boolean add_account(String account) {
+
 		try {
 			facebook.getPage(account, new Reading().limit(1));
 		} catch (FacebookException e) {
@@ -53,7 +52,6 @@ public class FacebookAgent {
 						"Insert into accounts values ('Facebook',?,?) ON DUPLICATE KEY UPDATE source='Facebook'")) {
 			stmt.setString(1, account);
 			stmt.setString(2, "2000-01-01 00:00:01");
-			stmt.execute();
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			// System.err.println("Error Code: " + e.getErrorCode() + " Message: " +
@@ -63,10 +61,7 @@ public class FacebookAgent {
 		return true;
 	}
 
-	public static void fetch() {
-		if(facebook==null) {
-			init_facebook();
-		}
+	public void fetch() {
 		ArrayList<String> accounts = new ArrayList<String>();
 		ArrayList<String> dates = new ArrayList<String>();
 		Calendar cal = Calendar.getInstance();
@@ -101,7 +96,7 @@ public class FacebookAgent {
 
 	}
 
-	private static void to_DB(String date, String account) {
+	public void to_DB(String date, String account) {
 		try (Connection cnlocal = Server.connlocal();
 				PreparedStatement ps = cnlocal.prepareStatement(
 						"Insert into user values(?,?,0,'No Info','No Info') ON DUPLICATE KEY UPDATE name=?")) {
@@ -178,7 +173,7 @@ public class FacebookAgent {
 		FacebookUtil.clearMaps();
 	}
 
-	private static void getData(Date sincedate, String account) {
+	private void getData(Date sincedate, String account) {
 
 		String fields = "comments.limit(900){like_count,id,message,created_time,from},";
 		fields += "message,";
