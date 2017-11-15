@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class TwitterAgent {
 
 	private Twitter twitter;
+	private static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	public TwitterAgent() {
 		TwitterFactory tfactory = new TwitterFactory(this.getConfig());
@@ -53,8 +56,25 @@ public class TwitterAgent {
 		}
 		return likes_retweets;
 	}
+	
+	public ArrayList<String> getAccounts() {
+		ArrayList<String> accounts = new ArrayList<String>();
+		Calendar cal= Calendar.getInstance();
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try (Connection cnlocal = Server.connlocal();
+				PreparedStatement ps = cnlocal.prepareStatement("Select * from accounts where source like 'Twitter' and last_update < ?");) {
+			ps.setString(1,df.format(cal.getTime()));
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				accounts.add(rs.getString("account"));
+			}
+		} catch (SQLException | ClassNotFoundException e) {
+			System.err.println("Errors fetching accounts");
+		}
+		return accounts;
+	}
 
-	public JSONArray getPageFeed(String account) throws JSONException, InterruptedException {
+	public void fetch(){
 		User twitterUser = null;
 		Paging p = new Paging();
 		p.setCount(1000);
@@ -63,9 +83,11 @@ public class TwitterAgent {
 		Query query2 = new Query();
 		Query query3 = new Query();
 		Query queryArr[] = { query, query1, query2, query3 };
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		QueryResult queryresult;
-		long currentPostEpoch = 0;
+		long currentPostEpoch;
+		Calendar cal= Calendar.getInstance();
+		for(String account: getAccounts()) {
+		currentPostEpoch= 0;
 		List<Status> results;
 		JSONArray output = new JSONArray();
 		// account = account.substring(1, account.length() - 1);
@@ -98,21 +120,21 @@ public class TwitterAgent {
 						twitterUser = status.getUser();
 						currentPostEpoch = status.getCreatedAt().getTime();
 
-						JSONObject out = new JSONObject();
-						out.put("source", "twitter");
-						out.put("user_id", twitterUser.getId());
-						out.put("Fname", twitterUser.getName());
-						out.put("age", "");
-						out.put("gender", "");
-						out.put("postId", status.getId());
-						out.put("location", twitterUser.getLocation());
-						out.put("retweet", status.getRetweetCount());
-						out.put("account", account);
-						out.put("url", "");
-						out.put("mediaSpecificInfo", "true");
-						out.put("imgUrl", "");// take care
-						out.put("postEpoch", currentPostEpoch);
-						out.put("post", status.getText());
+//						JSONObject out = new JSONObject();
+//						out.put("source", "twitter");
+//						out.put("user_id", twitterUser.getId());
+//						out.put("Fname", twitterUser.getName());
+//						out.put("age", "");
+//						out.put("gender", "");
+//						out.put("postId", status.getId());
+//						out.put("location", twitterUser.getLocation());
+//						out.put("retweet", status.getRetweetCount());
+//						out.put("account", account);
+//						out.put("url", "");
+//						out.put("mediaSpecificInfo", "true");
+//						out.put("imgUrl", "");// take care
+//						out.put("postEpoch", currentPostEpoch);
+//						out.put("post", status.getText());
 
 						try (Connection cnlocal = Server.connlocal();
 								PreparedStatement ps = cnlocal.prepareStatement(
@@ -176,10 +198,15 @@ public class TwitterAgent {
 								Logger.getLogger(TwitterAgent.class.getName()).severe(e.getMessage());
 							}
 						}
-						output.put(out);
+						//output.put(out);
 
 					}
-					Thread.sleep(1000);
+					
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						Logger.getLogger(TwitterAgent.class.getName()).severe(e.getMessage());
+					}
 					page++;
 				} while ((currentQuery = queryresult.nextQuery()) != null);
 			} catch (TwitterException ex) {
@@ -188,9 +215,27 @@ public class TwitterAgent {
 		Logger.getLogger(TwitterAgent.class.getName()).log(Level.INFO,
 				"Posts were retrieved! Total: " + output.length() + " Last Date:  {0}",
 				new Date(currentPostEpoch).toString());
-		return output;
+		updateLastUpdated(account, cal);
+		}
+		
+		//return output;
 
 	}
+	
+	public static void updateLastUpdated(String account, Calendar cal) {
+		try (Connection cnlocal = Server.connlocal();
+				PreparedStatement ps1 = cnlocal.prepareStatement(
+						"UPDATE `sentimentposts`.`accounts` SET `last_update`=? WHERE `source`='Twitter' and`account`=?")) {
+			ps1.setString(1, df.format(cal.getTime()));
+			ps1.setString(2, account);
+			ps1.execute();
+
+		} catch (SQLException | ClassNotFoundException e) {
+			Logger.getLogger(TwitterAgent.class.getName()).severe(e.getMessage());
+		}
+		
+	}
+	
 
 	public static boolean registerAccount(String account) {
 		int count = 0;

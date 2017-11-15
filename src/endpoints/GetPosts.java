@@ -40,7 +40,7 @@ public class GetPosts {
 		MultivaluedMap<String, String> params = ui.getQueryParameters();
 		if(params.get("accounts[]")!=null){
 		TwitterAgent twitter = new TwitterAgent();
-		return Response.status(Response.Status.OK).entity(twitter.getPageFeed(params.get("accounts[]").get(0)).toString()).build();
+		//return Response.status(Response.Status.OK).entity(twitter.getPageFeed(params.get("accounts[]").get(0)).toString()).build();
 		}
 		return Response.status(Response.Status.OK).entity("").build();
 	}

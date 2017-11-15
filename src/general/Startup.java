@@ -40,8 +40,10 @@ public class Startup implements ServletContextListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}// all done
-		new FacebookAgent().fetch();
+		//new FacebookAgent().fetch();
 		//new Oversight();
+		TwitterAgent twitter = new TwitterAgent();
+		twitter.fetch();
 	}
 
 	/*
