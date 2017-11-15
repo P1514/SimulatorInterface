@@ -64,10 +64,9 @@ public class TwitterAgent {
 		JSONArray output = new JSONArray();
 		account = account.substring(1, account.length() - 1);
 		int page = 1;
-			query.setQuery("@" + account);
+			query.setQuery(account);
 			query.setCount(100);
 			query.setResultType(Query.ResultType.recent);
-			// query.setQuery("source:"+ account);
 			try {
 
 				// results = twitter.getUserTimeline("@"+account,p);
