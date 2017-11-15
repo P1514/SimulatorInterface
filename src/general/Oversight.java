@@ -20,6 +20,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import amazon.AmazonAgent;
+
 import java.sql.Statement;
 
 import java.sql.Connection;
@@ -47,19 +49,26 @@ public class Oversight extends TimerTask {
 	 */
 	@Override
 	public void run() {
-		while (Server.runPolarity) {
-			if (newPosts()) {
-				calculatePolarity();
-			}
-
-			try {
-				Thread.sleep(1000 * 60 * 5);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
+		
+//		while (Server.runPolarity) {
+//			if (newPosts()) {
+//				calculatePolarity();
+//			}
+//
+//			try {
+//				Thread.sleep(1000 * 60 * 5);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+		
+		AmazonAgent.registerAccount("B005UA4FI8");
+		
+		AmazonAgent c = new AmazonAgent("B005UA4FI8");
+//		c.getReviews(1427842800,1443567600);
+		c.getReviews(-1, -1); //gets all reviews
+		c.store();
 	}
 
 	private void calculatePolarity() {
