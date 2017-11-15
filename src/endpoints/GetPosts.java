@@ -44,10 +44,4 @@ public class GetPosts {
 		}
 		return Response.status(Response.Status.OK).entity("").build();
 	}
-
-	
-
-
-
-
 }
