@@ -12,7 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.json.JSONException;
 
-import general.TwitterAgent;
+import twitter.TwitterAgent;
 
 @Path("/getPosts")
 public class GetPosts {
@@ -39,8 +39,8 @@ public class GetPosts {
 	public Response welcome() throws JSONException, SQLException, InterruptedException {
 		MultivaluedMap<String, String> params = ui.getQueryParameters();
 		if(params.get("accounts[]")!=null){
-		TwitterAgent twitter = new TwitterAgent();
-		//return Response.status(Response.Status.OK).entity(twitter.getPageFeed(params.get("accounts[]").get(0)).toString()).build();
+			TwitterAgent.registerAccount(params.get("accounts[]").get(0));
+			TwitterAgent.fetch();
 		}
 		return Response.status(Response.Status.OK).entity("").build();
 	}
