@@ -18,6 +18,7 @@ import amazon.AmazonAgent;
 import java.sql.Connection;
 
 import facebook.*;
+import twitter.*;
 
 /**
  * The Class Startup runs every time the server boots up.
@@ -45,19 +46,7 @@ public class Startup implements ServletContextListener {
 			e.printStackTrace();
 		}// all done
 		new Oversight();
-		
-		
-		
-		
-		//AmazonAgent.fetch();
-		
-		//TwitterAgent.fetch();
-		
-		//FacebookAgent.fetch();
-		
-		
-		//TwitterAgent twitter = new TwitterAgent();
-		//twitter.fetch();
+
 	}
 
 	/*
