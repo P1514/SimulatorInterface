@@ -15,7 +15,7 @@ import org.json.JSONException;
 
 import amazon.AmazonAgent;
 import facebook.FacebookAgent;
-import general.TwitterAgent;
+import twitter.TwitterAgent;
 
 @Path("/registerSFE")
 public class RegisterAccount {

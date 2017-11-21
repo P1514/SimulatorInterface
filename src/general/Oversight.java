@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import amazon.AmazonAgent;
 import facebook.FacebookAgent;
+import twitter.TwitterAgent;
 
 import java.sql.Statement;
 
@@ -57,6 +58,7 @@ public class Oversight extends TimerTask {
 			}
 			AmazonAgent.fetch();
 			FacebookAgent.fetch();
+			TwitterAgent.fetch();
 			try {
 				Thread.sleep(1000 * 60 * 5);
 			} catch (InterruptedException e) {

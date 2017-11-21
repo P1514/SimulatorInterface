@@ -22,8 +22,8 @@ import general.Server;
 
 public class FacebookAgent {
 	private static Facebook facebook = null;
-	private static String appId = "appId";
-	private static String appSecret = "appSecret";
+	private static String appId = "144176972872915";
+	private static String appSecret = "c711fa9dd46436ddeae8a8c7ddd722f2";
 	//private String permissions = "";
 	private static String accessToken = appId + "|" + appSecret;
 	
