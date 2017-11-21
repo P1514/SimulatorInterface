@@ -44,28 +44,20 @@ public class Startup implements ServletContextListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}// all done
-
-		AmazonAgent.registerAccount("B005UA4FI8");
-		TwitterAgent.registerAccount("nike");
-		FacebookAgent.add_account("airforce1");
+		new Oversight();
 		
 		
-		try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
-		AmazonAgent.fetch();
 		
-		TwitterAgent.fetch();
+		//AmazonAgent.fetch();
 		
-		FacebookAgent.fetch();
+		//TwitterAgent.fetch();
 		
-		//new Oversight();
-		TwitterAgent twitter = new TwitterAgent();
-		twitter.fetch();
+		//FacebookAgent.fetch();
+		
+		
+		//TwitterAgent twitter = new TwitterAgent();
+		//twitter.fetch();
 	}
 
 	/*

@@ -129,7 +129,7 @@ public class FacebookAgent {
 
 		try (Connection cnlocal = Server.connlocal();
 				PreparedStatement ps = cnlocal.prepareStatement(
-						"Insert into post(id,timestamp,message,likes,views,user_id,product,post_id) values(?,?,?,?,?,?,?,?)"
+						"Insert into post(id,timestamp,message,likes,views,user_id,product,source,post_id) values(?,?,?,?,?,?,?,?,?)"
 								+ " ON DUPLICATE KEY UPDATE message=?")) {
 
 			for (MyPost post : FacebookUtil.postdb.values()) {
@@ -140,8 +140,9 @@ public class FacebookAgent {
 				ps.setLong(5, post.getShares());
 				ps.setLong(6, post.getAuthor());
 				ps.setString(7, post.getAccount());
-				ps.setNull(8, java.sql.Types.BIGINT);
-				ps.setString(9, post.getMessage());
+				ps.setNull(9, java.sql.Types.BIGINT);
+				ps.setString(8, "Facebook");
+				ps.setString(10, post.getMessage());
 				//System.out.println(ps.toString());
 				ps.execute();
 				for (MyPost comm : post.getComments().values()) {
@@ -152,8 +153,9 @@ public class FacebookAgent {
 					ps.setLong(5, comm.getShares());
 					ps.setLong(6, comm.getAuthor());
 					ps.setString(7, comm.getAccount());
-					ps.setLong(8, post.getId());
-					ps.setString(9, comm.getMessage());
+					ps.setLong(9, post.getId());
+					ps.setString(8, "Facebook");
+					ps.setString(10, comm.getMessage());
 					//System.out.println(ps.toString());
 					ps.execute();
 				}
@@ -193,7 +195,7 @@ public class FacebookAgent {
 				posts = facebook.getPosts(account, new Reading().fields(fields).since(sincedate).limit(1));
 				break;
 			} catch (FacebookException e) {
-				System.err.println("ERROR Ocurred Retrying");
+				System.err.println("ERROR "+e.getErrorCode()+"Ocurred Retrying");
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e1) {
@@ -205,14 +207,15 @@ public class FacebookAgent {
 		Paging<Comment> comm_page;
 		Paging<Post> post_page;
 		int i = 1;
+		int ii=0;
 		do {
 			if (posts.size() == 0)
 				break;
-			//System.out.println("Post Nº " + (i++ - 1));
+			System.out.println("Post Nº " + (i++ - 1) + "Comments Nº "+ii);
 			Post post = posts.get(0);
 			post_page = posts.getPaging();
 			MyPost localpost = new MyPost(post, account);
-			int ii = 1;
+			ii = 1;
 			PagableList<Comment> comments = post.getComments();
 			do {
 				if (comments.size() == 0)

@@ -114,7 +114,7 @@ public class AmazonAgent {
 			System.out.println("Finished retrieving reviews. Reviews found: " + staticReviews.size());
 
 			System.out.println("Storing data into database...");
-			String sqlPost = "INSERT INTO sentimentposts.post VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE message = ?;";
+			String sqlPost = "INSERT INTO sentimentposts.post VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE message = ?;";
 			String sqlUser = "REPLACE sentimentposts.user (id, name, age, gender, location) VALUES (?,?,?,?,?);";
 
 			for (Review r : staticReviews.values()) {
@@ -143,8 +143,9 @@ public class AmazonAgent {
 					insert.setInt(5, 0);
 					insert.setLong(6, r.getAuthorId());
 					insert.setString(7, account);
-					insert.setNull(8, java.sql.Types.BIGINT);
-					insert.setString(9, r.getText());
+					insert.setNull(9, java.sql.Types.BIGINT);
+					insert.setString(8, "Amazon");
+					insert.setString(10, r.getText());
 					insert.executeUpdate();
 
 				} catch (SQLException e) {
@@ -282,7 +283,7 @@ public class AmazonAgent {
 	}
 
 	public static List<String> getAllAccounts() {
-		String sql = "SELECT account FROM sentimentposts.accounts;";
+		String sql = "SELECT account FROM sentimentposts.accounts where source like 'Amazon'";
 
 		List<String> accounts = new ArrayList<String>();
 		try (Connection cnlocal = Server.connlocal(); PreparedStatement select = cnlocal.prepareStatement(sql)) {
