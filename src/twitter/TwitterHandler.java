@@ -12,6 +12,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import com.vdurmont.emoji.EmojiParser;
+
 import general.Server;
 import twitter4j.Query;
 
@@ -90,14 +92,14 @@ public class TwitterHandler {
 					PreparedStatement ps1 = cnlocal.prepareStatement(str1)){
 				ps1.setLong(1, post.getPostId());
 				ps1.setString(2, post.getTimestamp());
-				ps1.setString(3, post.getMessage());
+				ps1.setString(3, EmojiParser.parseToAliases(post.getMessage()));
 				ps1.setLong(4, post.getLikes());
 				ps1.setInt(5, post.getRetweets());
 				ps1.setLong(6, post.getUserId());
 				ps1.setString(7, post.getProduct());
 				ps1.setLong(8, post.getParentPostId());
 				ps1.setString(9, "Twitter");
-				ps1.setString(10, post.getMessage());
+				ps1.setString(10, EmojiParser.parseToAliases(post.getMessage()));
 				ps1.setLong(11, post.getLikes());
 				ps1.setLong(12, post.getRetweets());
 				ps1.execute();
@@ -110,13 +112,13 @@ public class TwitterHandler {
 			try (Connection cnlocal = Server.connlocal(); PreparedStatement ps1 = cnlocal.prepareStatement(str2)) {
 				ps1.setLong(1, post.getPostId());
 				ps1.setString(2, post.getTimestamp());
-				ps1.setString(3, post.getMessage());
+				ps1.setString(3, EmojiParser.parseToAliases(post.getMessage()));
 				ps1.setLong(4, post.getLikes());
 				ps1.setInt(5, post.getRetweets());
 				ps1.setLong(6, post.getUserId());
 				ps1.setString(7, post.getProduct());
 				ps1.setString(8, "Twitter");
-				ps1.setString(9, post.getMessage());
+				ps1.setString(9, EmojiParser.parseToAliases(post.getMessage()));
 				ps1.setLong(10, post.getLikes());
 				ps1.setLong(11, post.getRetweets());
 				ps1.execute();
