@@ -53,11 +53,11 @@ public class TwitterHandler {
 	}
 
 	public void addPost(Long postId, TwitterPost post) {
-		posts.put(postId, post);
+		posts.putIfAbsent(postId, post);
 	}
 	
 	public void clearPosts() {
-		posts = new HashMap<>();
+		posts.clear();
 	}
 
 	public HashMap<Long, TwitterPost> getPosts() {
