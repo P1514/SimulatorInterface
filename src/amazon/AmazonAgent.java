@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -54,9 +55,14 @@ public class AmazonAgent {
 				url = url.replace(PAGE_NUMBER, "" + pageNumber);
 //				System.out.println("URL: " + url);
 				try {
-					Document doc = Jsoup.connect(url).userAgent(
-							"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-							.get();
+					String[] userAgents = { "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36",
+											"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:57.0) Gecko/20100101 Firefox/57.0",
+											"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
+											"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0",
+											"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0.1 Safari/604.3.5"
+										};
+					
+					Document doc = Jsoup.connect(url).userAgent( userAgents[ThreadLocalRandom.current().nextInt(0, userAgents.length)]).get();
 					Elements reviewElements = doc.select(".review");
 					// if no posts are found, uncomment the next line and inspect the result to
 					// check if we're getting a captcha

@@ -12,7 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.json.JSONException;
 
-import general.TwitterAgent;
+import twitter.TwitterAgent;
 import amazon.AmazonAgent;
 import facebook.FacebookAgent;
 
