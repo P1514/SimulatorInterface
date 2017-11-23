@@ -20,6 +20,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import amazon.AmazonAgent;
+import facebook.FacebookAgent;
+import twitter.TwitterAgent;
+
 import java.sql.Statement;
 
 import java.sql.Connection;
@@ -47,11 +51,14 @@ public class Oversight extends TimerTask {
 	 */
 	@Override
 	public void run() {
+		
 		while (Server.runPolarity) {
 			if (newPosts()) {
 				calculatePolarity();
 			}
-
+			AmazonAgent.fetch();
+			FacebookAgent.fetch();
+			TwitterAgent.fetch();
 			try {
 				Thread.sleep(1000 * 60 * 5);
 			} catch (InterruptedException e) {

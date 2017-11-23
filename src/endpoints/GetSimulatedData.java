@@ -32,7 +32,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import general.Server;
+import general.*;
 
 @Path("/getSimulatedData")
 public class GetSimulatedData {
@@ -65,7 +65,7 @@ public class GetSimulatedData {
 	 */
 	@GET
 	@Produces(MediaType.TEXT_HTML)
-	public Response welcome() throws JSONException, SQLException {
+	public Response welcome() throws JSONException, SQLException {		
 		MultivaluedMap<String, String> params = ui.getQueryParameters();
 		if (!verifyparams(params))
 			return Response.status(Response.Status.BAD_REQUEST).build();
@@ -116,7 +116,7 @@ public class GetSimulatedData {
 						postid = rs.getLong("id");
 						post = new JSONObject();
 						post.put("postId", rs.getLong("id"));
-						post.put("source", "SIM");
+						post.put("source", rs.getString("source"));
 						post.put("account", rs.getString("product"));
 						post.put("location", rs.getString("location"));
 						post.put("gender", rs.getString("gender"));
@@ -178,8 +178,8 @@ public class GetSimulatedData {
 				e.printStackTrace();
 			}
 		}
-		if (accounts_IS.size() > 0) {
-			String request = "http://opennebula.euprojects.net:8922/intelligent-search/getFeedback?";
+		/*if (accounts_IS.size() > 0) {
+			String request = "http://opennebula.euprojects.net/intelligent-search/getFeedback?";
 			for (int i = 0; i < accounts_IS.size(); i++) {
 				request += "&epochsFrom[]=" + epochsFrom_IS.get(i) + "&epochsTo[]=" + epochsTo_IS.get(i) + "&pssId="
 						+ pssId + "&accounts[]=";
@@ -213,7 +213,7 @@ public class GetSimulatedData {
 			for (int i = 0; i < ISdata.length(); i++) {
 				result.put(ISdata.get(i));
 			}
-		}
+		}*/
 
 		return Response.status(Response.Status.OK).entity(result.toString()).build();
 

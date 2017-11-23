@@ -1,21 +1,24 @@
 package general;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.logging.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 
-import com.mysql.jdbc.Connection;
+import amazon.AmazonAgent;
+
+import java.sql.Connection;
+
+import facebook.*;
+import twitter.*;
 
 /**
  * The Class Startup runs every time the server boots up.
@@ -34,7 +37,16 @@ public class Startup implements ServletContextListener {
 	 */
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd");
+		try {
+			cal.setTime(sdf.parse("2012-01-01"));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}// all done
 		new Oversight();
+
 	}
 
 	/*
