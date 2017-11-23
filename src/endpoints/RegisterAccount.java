@@ -41,8 +41,10 @@ public class RegisterAccount {
 	@Produces(MediaType.TEXT_HTML)
 	public Response welcome() throws JSONException, SQLException, InterruptedException {
 		params = ui.getQueryParameters();
-		if (!checkparams())
+		if (!checkparams()) {
+			System.out.println("Error No Accounts provided");
 			return Response.status(Response.Status.BAD_REQUEST).entity("No Accounts Provided").build();
+		}
 		List<String> types = params.get("type[]");
 		List<String> accounts = params.get("accounts[]");
 		int p_size = accounts.size();

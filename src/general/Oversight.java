@@ -51,41 +51,47 @@ public class Oversight extends TimerTask {
 	 */
 	@Override
 	public void run() {
-		
+
 		while (Server.runPolarity) {
 			if (newPosts()) {
 				calculatePolarity();
 			}
-			AmazonAgent.fetch();
-			FacebookAgent.fetch();
-			TwitterAgent.fetch();
-			try {
+			//AmazonAgent.fetch();
+			//FacebookAgent.fetch();
+			//TwitterAgent.fetch();
+			/*try {
 				Thread.sleep(1000 * 60 * 5);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 		}
 
 	}
 
 	private void calculatePolarity() {
+		return;
+	/*
 		Polarity_Calculation pc = new Polarity_Calculation();
 		try (Connection cnlocal = Server.conndata();
 				Statement query = cnlocal.createStatement();
-				PreparedStatement query2 = cnlocal.prepareStatement("update posts set polarity = 50.00 where id = ?");
-				ResultSet rs = query.executeQuery("Select id,message from posts where polarity is null limit 1200")) {
-			while (rs.next()) {
-				String message = rs.getString("message");
-				long post_id = rs.getLong("id");
-				query2.setLong(1, post_id);
-				query2.execute();
-				pc.calc_pol(post_id, message);
+				PreparedStatement query2 = cnlocal.prepareStatement("update posts set polarity = -1 where id = ?")) {
+			while (true) {
+				ResultSet rs = query.executeQuery("Select id,message from posts where polarity is null limit 1200");
+				if (rs.isLast()) break;
+				while (rs.next()) {
+					String message = rs.getString("message");
+					long post_id = rs.getLong("id");
+					query2.setLong(1, post_id);
+					query2.execute();
+					pc.calc_pol(post_id, message);
+				}
+				Thread.sleep(1000 * 60);
 			}
-			Thread.sleep(1000*60);
 		} catch (ClassNotFoundException | SQLException | InterruptedException e) {
+			e.printStackTrace();
 			System.out.println("Error on fetching new posts");
-		}
+		}*/
 
 	}
 
