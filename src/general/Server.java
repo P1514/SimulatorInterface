@@ -90,7 +90,7 @@ public class Server {
 		p.setMaxIdle(10);
 		p.setInitialSize(10);
 		p.setMaxWait(10000);
-		p.setRemoveAbandonedTimeout(60);
+		p.setRemoveAbandonedTimeout(120);
 		p.setMinEvictableIdleTimeMillis(30000);
 		p.setMinIdle(1);
 		p.setLogAbandoned(true);
@@ -114,7 +114,7 @@ public class Server {
 		p.setTestOnReturn(false);
 		p.setValidationInterval(30000);
 		p.setTimeBetweenEvictionRunsMillis(30000);
-		p.setMaxActive(10);
+		p.setMaxActive(50);
 		p.setMaxIdle(10);
 		p.setInitialSize(10);
 		p.setMaxWait(10000);

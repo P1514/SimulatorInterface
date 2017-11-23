@@ -133,7 +133,7 @@ public class GetSimulatedData {
 							date = new Date(1);
 						}
 						post.put("postEpoch", date.getTime());
-						post.put("post", rs.getString("message"));
+						post.put("post", rs.getString("message")+ " ");
 						post.put("mediaSpecificInfo", "true");
 						post.put("likes", rs.getLong("likes"));
 						post.put("views", rs.getLong("views"));
@@ -226,20 +226,20 @@ public class GetSimulatedData {
 				Statement stmt = cnlocal.createStatement();
 				ResultSet rs = stmt.executeQuery(("Select distinct(product) from post"));) {
 			while (rs.next())
-				SIM_accounts.add(rs.getString(1));
+				SIM_accounts.add(rs.getString(1).toLowerCase());
 
 		} catch (ClassNotFoundException | SQLException e) {
 			System.out.println("ERROR ON SPLIT ACCOUNTS");
 		}
 
 		for (int i = 0; i < accounts.size(); i++) {
-			if (SIM_accounts.contains(accounts.get(i))) {
-				accounts_SIM.add(accounts.get(i));
+			if (SIM_accounts.contains(accounts.get(i).toLowerCase())) {
+				accounts_SIM.add(accounts.get(i).toLowerCase());
 				epochsFrom_SIM.add(epochsFrom.get(i));
 				epochsTo_SIM.add(epochsTo.get(i));
 
 			} else {
-				accounts_IS.add(accounts.get(i));
+				accounts_IS.add(accounts.get(i).toLowerCase());
 				epochsFrom_IS.add(epochsFrom.get(i));
 				epochsTo_IS.add(epochsTo.get(i));
 			}
